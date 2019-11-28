@@ -121,12 +121,21 @@ class PullToRefreshNotificationState extends State<PullToRefreshNotification>
 
   RefreshIndicatorMode _mode;
   RefreshIndicatorMode get _refreshIndicatorMode => _mode;
-  set refreshIndicatorMode(value) {
+  set _refreshIndicatorMode(value) {
     if (_mode != value) {
       _mode = value;
       _onInnerNoticed();
     }
   }
+
+  newMode(value) {
+    if (_mode != value) {
+      _mode = value;
+      _onInnerNoticed();
+    }
+  }
+
+
 
   Future<void> _pendingRefreshFuture;
   bool _isIndicatorAtTop;
