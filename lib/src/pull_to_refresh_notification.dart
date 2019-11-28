@@ -107,6 +107,7 @@ class PullToRefreshNotificationState extends State<PullToRefreshNotification>
     with TickerProviderStateMixin<PullToRefreshNotification> {
   final _onNoticed =
       new StreamController<PullToRefreshScrollNotificationInfo>.broadcast();
+
   Stream<PullToRefreshScrollNotificationInfo> get onNoticed =>
       _onNoticed.stream;
 
@@ -120,7 +121,9 @@ class PullToRefreshNotificationState extends State<PullToRefreshNotification>
   Animation<double> _pullBackFactor;
 
   RefreshIndicatorMode _mode;
+
   RefreshIndicatorMode get _refreshIndicatorMode => _mode;
+
   set _refreshIndicatorMode(value) {
     if (_mode != value) {
       _mode = value;
@@ -128,19 +131,22 @@ class PullToRefreshNotificationState extends State<PullToRefreshNotification>
     }
   }
 
-  newMode(value) {
-    if (_mode != value) {
-      _mode = value;
-      _onInnerNoticed();
+  result(bool value) {
+    if (mounted && _refreshIndicatorMode == RefreshIndicatorMode.refresh) {
+      if (value) {
+        _dismiss(RefreshIndicatorMode.done);
+      } else
+//        _refreshIndicatorMode = RefreshIndicatorMode.error;
+        _dismiss(RefreshIndicatorMode.error);
     }
   }
-
-
 
   Future<void> _pendingRefreshFuture;
   bool _isIndicatorAtTop;
   double _dragOffset;
+
   double get _notificationDragOffset => _dragOffset;
+
   set _notificationDragOffset(double value) {
     if (value != null) {
       value = math.max(
@@ -194,6 +200,7 @@ class PullToRefreshNotificationState extends State<PullToRefreshNotification>
   }
 
   double maxContainerExtent = 0.0;
+
   bool _handleScrollNotification(ScrollNotification notification) {
     var reuslt = _innerhandleScrollNotification(notification);
     //_onInnerNoticed();
@@ -336,7 +343,8 @@ class PullToRefreshNotificationState extends State<PullToRefreshNotification>
     // _handleScrollNotification in response to a ScrollEndNotification or
     // direction change.
     assert(newMode == RefreshIndicatorMode.canceled ||
-        newMode == RefreshIndicatorMode.done);
+        newMode == RefreshIndicatorMode.done ||
+        newMode == RefreshIndicatorMode.error);
     //setState(() {
     _refreshIndicatorMode = newMode;
     //});
@@ -348,6 +356,10 @@ class PullToRefreshNotificationState extends State<PullToRefreshNotification>
       case RefreshIndicatorMode.canceled:
         await _positionController.animateTo(0.0,
             duration: _kIndicatorScaleDuration);
+        break;
+      case RefreshIndicatorMode.error:
+        await _positionController.animateTo(1.0,
+            duration: Duration(seconds: 2));
         break;
       default:
         assert(false);
@@ -395,6 +407,7 @@ class PullToRefreshNotificationState extends State<PullToRefreshNotification>
           if (mounted &&
               _refreshIndicatorMode == RefreshIndicatorMode.refresh) {
             completer.complete();
+            if (success == null) return;
             if (success) {
               _dismiss(RefreshIndicatorMode.done);
             } else
@@ -534,13 +547,16 @@ class PullToRefreshScrollNotificationInfo {
   final double dragOffset;
   final Widget refreshWiget;
   final PullToRefreshNotificationState pullToRefreshNotificationState;
+
   PullToRefreshScrollNotificationInfo(this.mode, this.dragOffset,
       this.refreshWiget, this.pullToRefreshNotificationState);
 }
 
 class PullToRefreshContainer extends StatefulWidget {
   final PullToRefreshContainerBuilder builder;
+
   PullToRefreshContainer(this.builder);
+
   @override
   _PullToRefreshContainerState createState() => _PullToRefreshContainerState();
 }
@@ -616,7 +632,8 @@ class _RefreshProgressIndicatorState extends _CircularProgressIndicatorState {
         child: CustomPaint(
           painter: _RefreshProgressIndicatorPainter(
             valueColor: widget._getValueColor(context),
-            value: null, // Draw the indeterminate progress indicator.
+            value: null,
+            // Draw the indeterminate progress indicator.
             headValue: headValue,
             tailValue: tailValue,
             stepValue: stepValue,
@@ -713,9 +730,10 @@ class _CircularProgressIndicatorState extends State<CircularProgressIndicator>
       child: CustomPaint(
         painter: _CircularProgressIndicatorPainter(
           valueColor: widget._getValueColor(context),
-          value: widget.value, // may be null
-          headValue:
-              headValue, // remaining arguments are ignored if widget.value is not null
+          value: widget.value,
+          // may be null
+          headValue: headValue,
+          // remaining arguments are ignored if widget.value is not null
           tailValue: tailValue,
           stepValue: stepValue,
           rotationValue: rotationValue,
@@ -839,6 +857,7 @@ class _CircularProgressIndicatorPainter extends CustomPainter {
 
   static const double _twoPi = math.pi * 2.0;
   static const double _epsilon = .001;
+
   // Canvas.drawArc(r, 0, 2*PI) doesn't draw anything, so just get close.
   static const double _sweep = _twoPi - _epsilon;
   static const double _startAngle = -math.pi / 2.0;

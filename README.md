@@ -29,6 +29,16 @@ enum RefreshIndicatorMode {
   error, //refresh failed
 }
 ```
+#修改了部分逻辑，现在可以在任意位置调用刷新的ui显示，
+#修改了即使刷新失败，也会自动回弹，更加符合逻辑(只有在主动模式下才会触发)
+```异步调用结束状态
+//成功
+key.currentState.result(true);
+---or---
+//失败,会显示失败的界面
+key.currentState.result(false);
+```
+
 
 # Sample 1 appbar
 build appbar to pull to refresh with PullToRefreshContainer
